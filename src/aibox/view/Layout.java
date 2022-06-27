@@ -13,6 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Random;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
@@ -24,7 +27,9 @@ public class Layout extends javax.swing.JFrame {
 
     Koneksi koneksi = new Koneksi();
 
-    private DefaultTableModel produkTableModel, pelangganTableModel;
+    private DefaultTableModel produkTableModel, pelangganTableModel, transaksiTableModel;
+    private String TransaksiID;
+    private ArrayList<Transaksi> TransaksiList = new ArrayList<>();
 
     private void ProdukPrefixID() {
         try {
@@ -152,6 +157,79 @@ public class Layout extends javax.swing.JFrame {
             System.out.println("Terjadi kesalahan");
         }
     }
+    
+    private void TransaksiPrefixID() {
+        try {
+            // Generate random alphanumeric string
+            String upperAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            String lowerAlphabet = "abcdefghijklmnopqrstuvwxyz";
+            String numbers = "0123456789";
+            String alphaNumeric = upperAlphabet + lowerAlphabet + numbers;
+            StringBuilder sb = new StringBuilder();
+            Random random = new Random();
+            int length = 6;
+
+            for(int i = 0; i < length; i++) {
+              int index = random.nextInt(alphaNumeric.length());
+              char randomChar = alphaNumeric.charAt(index);
+              sb.append(randomChar);
+            }
+
+            String randomString = sb.toString();
+            TransaksiID = randomString;
+        } catch (Exception e) {
+            System.out.println("TransaksiPrefixID error");
+        }
+    }
+    
+    public void TransaksiLoadData() {
+        TransaksiInputNamaProduk.removeAllItems();
+        TransaksiInputNamaProduk.setSelectedIndex(-1);
+        TransaksiInputNamaPelanggan.removeAllItems();
+        TransaksiInputNamaPelanggan.setSelectedIndex(-1);
+        
+        try {
+            Connection c = Koneksi.getKoneksi();
+            Statement produkS = c.createStatement();
+            Statement pelangganS = c.createStatement();
+
+            String produkSql = "SELECT * FROM produk ORDER BY nama";
+            ResultSet produkR = produkS.executeQuery(produkSql);
+            String pelangganSql = "SELECT * FROM pelanggan ORDER BY nama";
+            ResultSet pelangganR = pelangganS.executeQuery(pelangganSql);
+
+            while (produkR.next()) {
+                if (produkR.getInt("stok") > 0) {
+                    String nama = produkR.getString("nama");
+                    TransaksiInputNamaProduk.addItem(nama);
+                }
+            }
+            while (pelangganR.next()) {
+                String nama = pelangganR.getString("nama");
+                TransaksiInputNamaPelanggan.addItem(nama);
+            }
+            produkR.close();
+            produkS.close();
+        } catch (SQLException e) {
+            System.out.println("Terjadi kesalahan");
+        }
+    }
+    
+    public void TransaksiKalkulasiRefresh() {
+        int TotalPembayaran = 0;
+        transaksiTableModel.getDataVector().removeAllElements();
+        transaksiTableModel.fireTableDataChanged();
+        for (Transaksi transaksi: TransaksiList) {
+            Object[] o = new Object[3];
+            o[0] = transaksi.NamaProduk;
+            o[1] = transaksi.Jumlah;
+            o[2] = transaksi.TotalHarga;
+            transaksiTableModel.addRow(o);
+            TotalPembayaran += transaksi.TotalHarga;
+        }
+        
+        TransaksiInputTotalPembayaran.setText(Integer.toString(TotalPembayaran));
+    }
 
     public Layout() {
         initComponents();
@@ -184,6 +262,20 @@ public class Layout extends javax.swing.JFrame {
         PelangganButtonHapus.setEnabled(false);
         PelangganLoadData();
         PelangganPrefixID();
+        
+        // Init Transaksi
+        transaksiTableModel = new DefaultTableModel();
+        TransaksiDatatable.setModel(transaksiTableModel);
+        transaksiTableModel.addColumn("Nama Produk");
+        transaksiTableModel.addColumn("Jumlah");
+        transaksiTableModel.addColumn("Total Harga");
+        TransaksiInputTotalPembayaran.setEnabled(false);
+        TransaksiInputTotalPembayaran.setText("0");
+        TransaksiInputKembali.setEnabled(false);
+        TransaksiInputKembali.setText("0");
+        TransaksiInputBayar.setText("0");
+        TransaksiLoadData();
+        TransaksiPrefixID();
     }
 
     /**
@@ -200,8 +292,8 @@ public class Layout extends javax.swing.JFrame {
         LogoText = new javax.swing.JLabel();
         LogoImg = new javax.swing.JLabel();
         MenuProduk = new javax.swing.JLabel();
-        MenuTransaksi = new javax.swing.JLabel();
         MenuPelanggan = new javax.swing.JLabel();
+        MenuTransaksi = new javax.swing.JLabel();
         MenuProdukSeparatorBottom = new javax.swing.JSeparator();
         MenuProdukSeparatorTop = new javax.swing.JSeparator();
         MenuTransaksiSeparatorBottom = new javax.swing.JSeparator();
@@ -253,6 +345,26 @@ public class Layout extends javax.swing.JFrame {
         PelangganButtonEdit = new javax.swing.JButton();
         PelangganButtonHapus = new javax.swing.JButton();
         PelangganButtonBatal = new javax.swing.JButton();
+        Transaksi = new javax.swing.JPanel();
+        TransaksiPanelHeader = new javax.swing.JPanel();
+        TransaksiPanelHeaderLabel = new javax.swing.JLabel();
+        TransaksiLabelNamaProduk = new javax.swing.JLabel();
+        TransaksiInputNamaProduk = new javax.swing.JComboBox<>();
+        TransaksiLabelJumlah = new javax.swing.JLabel();
+        TransaksiInputJumlah = new javax.swing.JTextField();
+        TransaksiButtonTambahProduk = new javax.swing.JButton();
+        TransaksiButtonHapusProduk = new javax.swing.JButton();
+        TransaksiDatatableOverflow = new javax.swing.JScrollPane();
+        TransaksiDatatable = new javax.swing.JTable();
+        TransaksiLabelTotalPembayaran = new javax.swing.JLabel();
+        TransaksiInputTotalPembayaran = new javax.swing.JTextField();
+        TransaksiLabelBayar = new javax.swing.JLabel();
+        TransaksiInputBayar = new javax.swing.JTextField();
+        TransaksiLabelKembali = new javax.swing.JLabel();
+        TransaksiInputKembali = new javax.swing.JTextField();
+        TransaksiLabelNamaPelanggan = new javax.swing.JLabel();
+        TransaksiInputNamaPelanggan = new javax.swing.JComboBox<>();
+        TransaksiButtonKonfirmasiTransaksi = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -282,13 +394,6 @@ public class Layout extends javax.swing.JFrame {
         });
         Sidebar.add(MenuProduk, new org.netbeans.lib.awtextra.AbsoluteConstraints(19, 192, 209, 34));
 
-        MenuTransaksi.setFont(new java.awt.Font("Verdana", 0, 18)); // NOI18N
-        MenuTransaksi.setForeground(new java.awt.Color(255, 255, 255));
-        MenuTransaksi.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-transaksi.png"))); // NOI18N
-        MenuTransaksi.setText("  TRANSAKSI");
-        MenuTransaksi.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        Sidebar.add(MenuTransaksi, new org.netbeans.lib.awtextra.AbsoluteConstraints(19, 254, 209, 34));
-
         MenuPelanggan.setFont(new java.awt.Font("Verdana", 0, 18)); // NOI18N
         MenuPelanggan.setForeground(new java.awt.Color(255, 255, 255));
         MenuPelanggan.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-pelanggan.png"))); // NOI18N
@@ -299,11 +404,23 @@ public class Layout extends javax.swing.JFrame {
                 MenuPelangganMouseClicked(evt);
             }
         });
-        Sidebar.add(MenuPelanggan, new org.netbeans.lib.awtextra.AbsoluteConstraints(19, 316, 209, 34));
+        Sidebar.add(MenuPelanggan, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 250, 209, 34));
+
+        MenuTransaksi.setFont(new java.awt.Font("Verdana", 0, 18)); // NOI18N
+        MenuTransaksi.setForeground(new java.awt.Color(255, 255, 255));
+        MenuTransaksi.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-transaksi.png"))); // NOI18N
+        MenuTransaksi.setText("  TRANSAKSI");
+        MenuTransaksi.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        MenuTransaksi.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                MenuTransaksiMouseClicked(evt);
+            }
+        });
+        Sidebar.add(MenuTransaksi, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 310, 209, 34));
         Sidebar.add(MenuProdukSeparatorBottom, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 238, 234, 10));
         Sidebar.add(MenuProdukSeparatorTop, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 177, 234, 9));
-        Sidebar.add(MenuTransaksiSeparatorBottom, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 300, 234, 10));
-        Sidebar.add(MenuPelangganSeparatorBottom1, new org.netbeans.lib.awtextra.AbsoluteConstraints(6, 362, 228, 10));
+        Sidebar.add(MenuTransaksiSeparatorBottom, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 290, 234, 10));
+        Sidebar.add(MenuPelangganSeparatorBottom1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 350, 228, 10));
 
         Content.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
         Content.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
@@ -335,23 +452,23 @@ public class Layout extends javax.swing.JFrame {
         );
 
         ProdukLabelID.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        ProdukLabelID.setText("ID");
+        ProdukLabelID.setText("ID *");
 
         ProdukInputID.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
         ProdukLabelNama.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        ProdukLabelNama.setText("Nama");
+        ProdukLabelNama.setText("Nama *");
 
         ProdukInputNama.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
         ProdukLabelJenis.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        ProdukLabelJenis.setText("Kategori");
+        ProdukLabelJenis.setText("Kategori *");
 
         ProdukInputJenis.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
         ProdukInputJenis.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "iPhone", "iPad", "Macbook", "Lainnya" }));
 
         ProdukLabelHarga.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        ProdukLabelHarga.setText("Harga");
+        ProdukLabelHarga.setText("Harga *");
 
         ProdukInputHarga.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
@@ -445,7 +562,7 @@ public class Layout extends javax.swing.JFrame {
         });
 
         ProdukLabelStok.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        ProdukLabelStok.setText("Stok");
+        ProdukLabelStok.setText("Stok *");
 
         ProdukInputStok.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
@@ -460,7 +577,7 @@ public class Layout extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, ManajemenProdukLayout.createSequentialGroup()
                         .addComponent(ProdukButtonSimpan, javax.swing.GroupLayout.PREFERRED_SIZE, 157, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ProdukButtonEdit, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(ProdukButtonEdit, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, ManajemenProdukLayout.createSequentialGroup()
                         .addGroup(ManajemenProdukLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(ProdukLabelNama)
@@ -472,7 +589,7 @@ public class Layout extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, ManajemenProdukLayout.createSequentialGroup()
                         .addGroup(ManajemenProdukLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(ProdukLabelHarga)
-                            .addComponent(ProdukLabelJenis, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(ProdukLabelJenis, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(ManajemenProdukLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(ProdukInputHarga, javax.swing.GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
@@ -567,12 +684,12 @@ public class Layout extends javax.swing.JFrame {
         );
 
         PelangganLabelID.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        PelangganLabelID.setText("ID");
+        PelangganLabelID.setText("ID *");
 
         PelangganInputID.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
         PelangganLabelNama.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
-        PelangganLabelNama.setText("Nama");
+        PelangganLabelNama.setText("Nama *");
 
         PelangganInputNama.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
 
@@ -783,6 +900,217 @@ public class Layout extends javax.swing.JFrame {
 
         Content.addTab("PELANGGAN", ManajemenPelanggan);
 
+        Transaksi.setBackground(new java.awt.Color(241, 241, 241));
+        Transaksi.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiPanelHeader.setBackground(new java.awt.Color(0, 0, 0));
+
+        TransaksiPanelHeaderLabel.setFont(new java.awt.Font("Verdana", 1, 24)); // NOI18N
+        TransaksiPanelHeaderLabel.setForeground(new java.awt.Color(255, 255, 255));
+        TransaksiPanelHeaderLabel.setText("TRANSAKSI");
+
+        javax.swing.GroupLayout TransaksiPanelHeaderLayout = new javax.swing.GroupLayout(TransaksiPanelHeader);
+        TransaksiPanelHeader.setLayout(TransaksiPanelHeaderLayout);
+        TransaksiPanelHeaderLayout.setHorizontalGroup(
+            TransaksiPanelHeaderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TransaksiPanelHeaderLayout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addComponent(TransaksiPanelHeaderLabel)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        TransaksiPanelHeaderLayout.setVerticalGroup(
+            TransaksiPanelHeaderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, TransaksiPanelHeaderLayout.createSequentialGroup()
+                .addContainerGap(20, Short.MAX_VALUE)
+                .addComponent(TransaksiPanelHeaderLabel)
+                .addGap(19, 19, 19))
+        );
+
+        TransaksiLabelNamaProduk.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelNamaProduk.setText("Nama Produk *");
+
+        TransaksiInputNamaProduk.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiLabelJumlah.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelJumlah.setText("Jumlah *");
+
+        TransaksiInputJumlah.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiButtonTambahProduk.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiButtonTambahProduk.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-simpan.png"))); // NOI18N
+        TransaksiButtonTambahProduk.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        TransaksiButtonTambahProduk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TransaksiButtonTambahProdukActionPerformed(evt);
+            }
+        });
+
+        TransaksiButtonHapusProduk.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiButtonHapusProduk.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-hapus.png"))); // NOI18N
+        TransaksiButtonHapusProduk.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        TransaksiButtonHapusProduk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TransaksiButtonHapusProdukActionPerformed(evt);
+            }
+        });
+
+        TransaksiDatatable.setAutoCreateRowSorter(true);
+        TransaksiDatatable.setBackground(new java.awt.Color(0, 0, 0));
+        TransaksiDatatable.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiDatatable.setForeground(new java.awt.Color(255, 255, 255));
+        TransaksiDatatable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
+            },
+            new String [] {
+                "Nama Produk", "Jumlah", "Total Harga"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        TransaksiDatatable.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        TransaksiDatatable.setRowHeight(30);
+        TransaksiDatatableOverflow.setViewportView(TransaksiDatatable);
+
+        TransaksiLabelTotalPembayaran.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelTotalPembayaran.setText("Total Pembayaran");
+
+        TransaksiInputTotalPembayaran.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiLabelBayar.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelBayar.setText("Bayar");
+
+        TransaksiInputBayar.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiInputBayar.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                TransaksiInputBayarKeyReleased(evt);
+            }
+        });
+
+        TransaksiLabelKembali.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelKembali.setText("Kembali");
+
+        TransaksiInputKembali.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiLabelNamaPelanggan.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiLabelNamaPelanggan.setText("Nama Pelanggan");
+
+        TransaksiInputNamaPelanggan.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+
+        TransaksiButtonKonfirmasiTransaksi.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        TransaksiButtonKonfirmasiTransaksi.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-simpan.png"))); // NOI18N
+        TransaksiButtonKonfirmasiTransaksi.setText(" Konfirmasi Transaksi");
+        TransaksiButtonKonfirmasiTransaksi.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        TransaksiButtonKonfirmasiTransaksi.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TransaksiButtonKonfirmasiTransaksiActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout TransaksiLayout = new javax.swing.GroupLayout(Transaksi);
+        Transaksi.setLayout(TransaksiLayout);
+        TransaksiLayout.setHorizontalGroup(
+            TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(TransaksiPanelHeader, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(TransaksiLayout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(TransaksiDatatableOverflow)
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addComponent(TransaksiInputNamaProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TransaksiLabelJumlah)
+                            .addGroup(TransaksiLayout.createSequentialGroup()
+                                .addComponent(TransaksiInputJumlah, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(TransaksiButtonTambahProduk, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(TransaksiButtonHapusProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TransaksiLabelKembali, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiInputKembali, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiInputBayar, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(TransaksiButtonKonfirmasiTransaksi, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE))
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TransaksiLabelBayar, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiLabelNamaProduk))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TransaksiInputTotalPembayaran, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiLabelTotalPembayaran, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TransaksiLabelNamaPelanggan, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiInputNamaPelanggan, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addGap(529, 529, 529))
+        );
+        TransaksiLayout.setVerticalGroup(
+            TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TransaksiLayout.createSequentialGroup()
+                .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addComponent(TransaksiPanelHeader, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(TransaksiLayout.createSequentialGroup()
+                                .addComponent(TransaksiLabelNamaProduk)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TransaksiInputNamaProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(TransaksiLayout.createSequentialGroup()
+                                .addComponent(TransaksiLabelJumlah)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(TransaksiButtonTambahProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(TransaksiInputJumlah, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(TransaksiButtonHapusProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE)
+                        .addComponent(TransaksiDatatableOverflow, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(TransaksiLabelTotalPembayaran)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(TransaksiInputTotalPembayaran, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(TransaksiInputNamaPelanggan, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(TransaksiLabelNamaPelanggan)
+                        .addGap(38, 38, 38)))
+                .addComponent(TransaksiLabelBayar)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(TransaksiLayout.createSequentialGroup()
+                        .addComponent(TransaksiInputBayar, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(TransaksiLabelKembali)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(TransaksiInputKembali, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(TransaksiButtonKonfirmasiTransaksi, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(28, 28, 28))
+        );
+
+        Content.addTab("TRANSAKSI", Transaksi);
+
         javax.swing.GroupLayout BodyLayout = new javax.swing.GroupLayout(Body);
         Body.setLayout(BodyLayout);
         BodyLayout.setHorizontalGroup(
@@ -795,9 +1123,7 @@ public class Layout extends javax.swing.JFrame {
         BodyLayout.setVerticalGroup(
             BodyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(Sidebar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(BodyLayout.createSequentialGroup()
-                .addComponent(Content, javax.swing.GroupLayout.PREFERRED_SIZE, 630, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(Content, javax.swing.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)
         );
 
         Content.getAccessibleContext().setAccessibleName("Content");
@@ -812,7 +1138,7 @@ public class Layout extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(Body, javax.swing.GroupLayout.PREFERRED_SIZE, 627, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(Body, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -1154,12 +1480,119 @@ public class Layout extends javax.swing.JFrame {
     private void MenuProdukMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuProdukMouseClicked
         // TODO add your handling code here:
         Content.setSelectedIndex(0);
+        ProdukLoadData();
+        ProdukPrefixID();
     }//GEN-LAST:event_MenuProdukMouseClicked
 
     private void MenuPelangganMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuPelangganMouseClicked
         // TODO add your handling code here:
         Content.setSelectedIndex(1);
+        PelangganLoadData();
+        PelangganPrefixID();
     }//GEN-LAST:event_MenuPelangganMouseClicked
+
+    private void TransaksiButtonTambahProdukActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TransaksiButtonTambahProdukActionPerformed
+        // TODO add your handling code here:
+        String NamaProduk = (String) TransaksiInputNamaProduk.getSelectedItem();
+        String Jumlah = TransaksiInputJumlah.getText();
+        String IdProduk = "";
+        int TotalHarga = 0;
+      
+        try {
+            Connection c = Koneksi.getKoneksi();
+            Statement s = c.createStatement();
+
+            String sql = "SELECT id, harga FROM produk WHERE nama='" + NamaProduk + "'";
+            ResultSet r = s.executeQuery(sql);
+
+            while (r.next()) {
+                IdProduk = r.getString("id");
+                TotalHarga = Integer.parseInt(Jumlah) * Integer.parseInt(r.getString("harga"));
+                TransaksiList.add(new Transaksi(IdProduk, NamaProduk, Jumlah, TotalHarga));
+                TransaksiKalkulasiRefresh();
+            }
+            r.close();
+            s.close();
+            TransaksiInputJumlah.setText("");
+        } catch (SQLException e) {
+            System.out.println("Terjadi kesalahan");
+        }
+    }//GEN-LAST:event_TransaksiButtonTambahProdukActionPerformed
+
+    private void MenuTransaksiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuTransaksiMouseClicked
+        // TODO add your handling code here:
+        Content.setSelectedIndex(2);
+        TransaksiLoadData();
+        TransaksiPrefixID();
+    }//GEN-LAST:event_MenuTransaksiMouseClicked
+
+    private void TransaksiButtonHapusProdukActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TransaksiButtonHapusProdukActionPerformed
+        // TODO add your handling code here:
+        int i = TransaksiDatatable.getSelectedRow();
+        TransaksiList.remove(i);
+        TransaksiKalkulasiRefresh();
+    }//GEN-LAST:event_TransaksiButtonHapusProdukActionPerformed
+
+    private void TransaksiInputBayarKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_TransaksiInputBayarKeyReleased
+        // TODO add your handling code here:
+        String TotalPembayaran = TransaksiInputTotalPembayaran.getText();
+        String Bayar = TransaksiInputBayar.getText();
+        
+        
+        if (Bayar != null && !Bayar.isEmpty() && TotalPembayaran != null && !TotalPembayaran.isEmpty() && Integer.parseInt(Bayar) >= Integer.parseInt(TotalPembayaran)) {
+            int Kembali = Integer.parseInt(Bayar) - Integer.parseInt(TotalPembayaran);
+            TransaksiInputKembali.setText(String.valueOf(Kembali));
+        }
+        else {
+            TransaksiInputKembali.setText("0");
+        }
+    }//GEN-LAST:event_TransaksiInputBayarKeyReleased
+
+    private void TransaksiButtonKonfirmasiTransaksiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TransaksiButtonKonfirmasiTransaksiActionPerformed
+        // TODO add your handling code here:
+        String IdPelanggan;
+        String NamaPelanggan = (String) TransaksiInputNamaPelanggan.getSelectedItem();
+        String TotalPembayaran = TransaksiInputTotalPembayaran.getText();
+        String Bayar = TransaksiInputBayar.getText();
+        String Kembali = TransaksiInputKembali.getText();
+        
+        LocalDateTime CurrentDateObj = LocalDateTime.now(); 
+        DateTimeFormatter FormatDateObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");  
+        String CurrentDateTimeFormatted = CurrentDateObj.format(FormatDateObj);
+        
+        if (Integer.parseInt(Bayar) >= Integer.parseInt(TotalPembayaran)) {
+            try {
+                Connection c = Koneksi.getKoneksi();
+                Statement s = c.createStatement();
+
+                String sql = "SELECT id FROM pelanggan WHERE nama='" + NamaPelanggan + "'";
+                ResultSet r = s.executeQuery(sql);
+
+                while (r.next()) {
+                    IdPelanggan = r.getString("id");
+                    
+                    String transaksiSql = "INSERT INTO transaksi VALUES (?, ?, ?, ?, ?, ?)";
+                    PreparedStatement p = c.prepareStatement(transaksiSql);
+                    p.setString(1, TransaksiID);
+                    p.setString(2, IdPelanggan);
+                    p.setString(3, TotalPembayaran);
+                    p.setString(4, Bayar);
+                    p.setString(5, Kembali);
+                    p.setString(6, CurrentDateTimeFormatted);
+                    p.executeUpdate();
+                    JOptionPane.showMessageDialog(null, "Transaksi berhasil.");
+                }
+                r.close();
+                s.close();
+                TransaksiInputJumlah.setText("");
+            } catch (SQLException e) {
+                System.out.println(e);
+            }
+        }
+        else {
+            JOptionPane.showMessageDialog(null, "Uang yang Anda masukkan kurang! Silahkan cek kembali.");
+        }
+    }//GEN-LAST:event_TransaksiButtonKonfirmasiTransaksiActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1260,7 +1693,40 @@ public class Layout extends javax.swing.JFrame {
     private javax.swing.JPanel ProdukPanelHeader;
     private javax.swing.JLabel ProdukPanelHeaderLabel;
     private javax.swing.JPanel Sidebar;
+    private javax.swing.JPanel Transaksi;
+    private javax.swing.JButton TransaksiButtonHapusProduk;
+    private javax.swing.JButton TransaksiButtonKonfirmasiTransaksi;
+    private javax.swing.JButton TransaksiButtonTambahProduk;
+    private javax.swing.JTable TransaksiDatatable;
+    private javax.swing.JScrollPane TransaksiDatatableOverflow;
+    private javax.swing.JTextField TransaksiInputBayar;
+    private javax.swing.JTextField TransaksiInputJumlah;
+    private javax.swing.JTextField TransaksiInputKembali;
+    private javax.swing.JComboBox<String> TransaksiInputNamaPelanggan;
+    private javax.swing.JComboBox<String> TransaksiInputNamaProduk;
+    private javax.swing.JTextField TransaksiInputTotalPembayaran;
+    private javax.swing.JLabel TransaksiLabelBayar;
+    private javax.swing.JLabel TransaksiLabelJumlah;
+    private javax.swing.JLabel TransaksiLabelKembali;
+    private javax.swing.JLabel TransaksiLabelNamaPelanggan;
+    private javax.swing.JLabel TransaksiLabelNamaProduk;
+    private javax.swing.JLabel TransaksiLabelTotalPembayaran;
+    private javax.swing.JPanel TransaksiPanelHeader;
+    private javax.swing.JLabel TransaksiPanelHeaderLabel;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     // End of variables declaration//GEN-END:variables
+}
+
+class Transaksi {
+    public String IdProduk, NamaProduk, Jumlah;
+    public int TotalHarga;
+    
+    Transaksi(String IdProduk, String NamaProduk, String Jumlah, int TotalHarga)
+    {
+        this.IdProduk = IdProduk;
+        this.NamaProduk = NamaProduk;
+        this.Jumlah = Jumlah;
+        this.TotalHarga = TotalHarga;
+    }
 }
