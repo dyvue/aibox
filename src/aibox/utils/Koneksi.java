@@ -8,8 +8,8 @@ package aibox.utils;
 import java.sql.DriverManager;
 
 /**
- *
- * @author PY7
+ * @author  Romadhan Edy
+ * @version 1.0
  */
 public class Koneksi {
     private static java.sql.Connection koneksi;

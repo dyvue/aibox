@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="aibox.jar" size="42743" download="eager" />
+    <jar href="aibox.jar" size="46477" download="eager" />
     <jar href="lib\AbsoluteLayout.jar" size="10658" download="eager" />
     <jar href="lib\mysql-connector-java-8.0.28.jar" size="2476480" download="eager" />
   </resources>

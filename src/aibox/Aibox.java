@@ -9,8 +9,8 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 /**
- *
- * @author romad
+ * @author  Romadhan Edy, Bagas Ardiansyah, Marlinus, Abdul Latif
+ * @version 1.0
  */
 public class Aibox extends Application {
     

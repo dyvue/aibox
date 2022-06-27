@@ -9,12 +9,14 @@ package aibox.model;
  * @author romad
  */
 public class Transaksi {
-    public String ProdukId;
-    public int Jumlah;
+    public String IdProduk, NamaProduk, Jumlah;
+    public int TotalHarga;
     
-    Transaksi(String ProdukId, int Jumlah)
+    public Transaksi(String IdProduk, String NamaProduk, String Jumlah, int TotalHarga)
     {
-        this.ProdukId = ProdukId;
+        this.IdProduk = IdProduk;
+        this.NamaProduk = NamaProduk;
         this.Jumlah = Jumlah;
+        this.TotalHarga = TotalHarga;
     }
 }
