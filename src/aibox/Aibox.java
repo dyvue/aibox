@@ -4,7 +4,7 @@
  */
 package aibox;
 
-import aibox.view.Layout;
+import aibox.view.Login;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -16,7 +16,7 @@ public class Aibox extends Application {
     
     @Override
     public void start(Stage primaryStage) {
-        Layout ui = new Layout();
+        Login ui = new Login();
         ui.setVisible(true);   
     }
 

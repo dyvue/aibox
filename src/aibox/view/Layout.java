@@ -4,6 +4,7 @@
  */
 package aibox.view;
 
+import aibox.model.LoginInformation;
 import aibox.model.Transaksi;
 import aibox.utils.Helper;
 import aibox.utils.Koneksi;
@@ -31,6 +32,7 @@ public class Layout extends javax.swing.JFrame {
     private DefaultTableModel produkTableModel, pelangganTableModel, transaksiTableModel;
     private String TransaksiID, TransaksiProdukID;
     private ArrayList<Transaksi> TransaksiList = new ArrayList<>();
+    public ArrayList<LoginInformation> LoginInformation = new ArrayList<>();
 
     private void ProdukPrefixID() {
         try {
@@ -324,6 +326,7 @@ public class Layout extends javax.swing.JFrame {
         MenuProdukSeparatorTop = new javax.swing.JSeparator();
         MenuTransaksiSeparatorBottom = new javax.swing.JSeparator();
         MenuPelangganSeparatorBottom1 = new javax.swing.JSeparator();
+        MenuButtonLogout = new javax.swing.JButton();
         Content = new javax.swing.JTabbedPane();
         ManajemenProduk = new javax.swing.JPanel();
         ProdukPanelHeader = new javax.swing.JPanel();
@@ -451,6 +454,17 @@ public class Layout extends javax.swing.JFrame {
         Sidebar.add(MenuProdukSeparatorTop, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 177, 234, 9));
         Sidebar.add(MenuTransaksiSeparatorBottom, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 290, 234, 10));
         Sidebar.add(MenuPelangganSeparatorBottom1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 350, 228, 10));
+
+        MenuButtonLogout.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
+        MenuButtonLogout.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aibox/img/ic-logout.png"))); // NOI18N
+        MenuButtonLogout.setText(" Logout");
+        MenuButtonLogout.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        MenuButtonLogout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                MenuButtonLogoutActionPerformed(evt);
+            }
+        });
+        Sidebar.add(MenuButtonLogout, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 590, 210, -1));
 
         Content.setTabPlacement(javax.swing.JTabbedPane.BOTTOM);
         Content.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
@@ -1124,13 +1138,10 @@ public class Layout extends javax.swing.JFrame {
                         .addComponent(TransaksiButtonTambahProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(TransaksiButtonHapusProduk, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18)
                 .addGroup(TransaksiLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(TransaksiLayout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 493, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(TransaksiLayout.createSequentialGroup()
-                        .addGap(28, 28, 28)
-                        .addComponent(TransaksiButtonPrintStrukPembayaran)))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 493, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(TransaksiButtonPrintStrukPembayaran))
                 .addContainerGap())
         );
         TransaksiLayout.setVerticalGroup(
@@ -1625,6 +1636,10 @@ public class Layout extends javax.swing.JFrame {
         String TotalPembayaran = TransaksiInputTotalPembayaran.getText();
         String Bayar = TransaksiInputBayar.getText();
         String Kembali = TransaksiInputKembali.getText();
+        String NamaAkun = "";
+        for (LoginInformation loginInfo: LoginInformation) {
+            NamaAkun = loginInfo.Nama;
+        }
         
         LocalDateTime CurrentDateObj = LocalDateTime.now(); 
         DateTimeFormatter FormatDateObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");  
@@ -1674,6 +1689,7 @@ public class Layout extends javax.swing.JFrame {
                     "A I B O X  S T O R E\n\n" +
                     "=============================================\n\n" +
                     "ID Transaksi \t\t: " + TransaksiID + "\n" +
+                    "Dibuat Oleh \t\t: " + NamaAkun + "\n" +
                     "Tanggal \t\t: " + CurrentDateTimeFormatted + "\n" +
                     "Nama Pelanggan \t: " + NamaPelanggan + "\n\n" +
                     "===========================================" + "\n\n");
@@ -1747,6 +1763,15 @@ public class Layout extends javax.swing.JFrame {
         TransaksiPrintArea.setText("");
     }//GEN-LAST:event_TransaksiButtonResetTransaksiActionPerformed
 
+    private void MenuButtonLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MenuButtonLogoutActionPerformed
+        // TODO add your handling code here:
+        LoginInformation.clear();
+        this.setVisible(false);
+        this.dispose();
+        Login uiLogin = new Login();
+        uiLogin.setVisible(true);
+    }//GEN-LAST:event_MenuButtonLogoutActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1796,6 +1821,7 @@ public class Layout extends javax.swing.JFrame {
     private javax.swing.JLabel LogoText;
     private javax.swing.JPanel ManajemenPelanggan;
     private javax.swing.JPanel ManajemenProduk;
+    private javax.swing.JButton MenuButtonLogout;
     private javax.swing.JLabel MenuPelanggan;
     private javax.swing.JSeparator MenuPelangganSeparatorBottom1;
     private javax.swing.JLabel MenuProduk;

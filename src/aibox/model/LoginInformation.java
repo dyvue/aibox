@@ -8,15 +8,12 @@ package aibox.model;
  * @author  Romadhan Edy
  * @version 1.0
  */
-public class Transaksi {
-    public String IdProduk, NamaProduk, Jumlah;
-    public int TotalHarga;
+public class LoginInformation {
+    public String IdProduk, Nama;
     
-    public Transaksi(String IdProduk, String NamaProduk, String Jumlah, int TotalHarga)
+    public LoginInformation(String IdPegawai, String Nama)
     {
         this.IdProduk = IdProduk;
-        this.NamaProduk = NamaProduk;
-        this.Jumlah = Jumlah;
-        this.TotalHarga = TotalHarga;
+        this.Nama = Nama;
     }
 }
