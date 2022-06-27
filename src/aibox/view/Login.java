@@ -47,9 +47,11 @@ public class Login extends javax.swing.JFrame {
         LogoImg = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Login - AIBOX");
         setBackground(new java.awt.Color(0, 0, 0));
 
         Container.setBackground(new java.awt.Color(249, 249, 249));
+        Container.setToolTipText("");
 
         LoginLabelIDPegawai.setFont(new java.awt.Font("Verdana", 0, 14)); // NOI18N
         LoginLabelIDPegawai.setText("ID Pegawai");

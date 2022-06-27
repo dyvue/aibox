@@ -400,6 +400,7 @@ public class Layout extends javax.swing.JFrame {
         TransaksiButtonPrintStrukPembayaran = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("AIBOX");
 
         Body.setBackground(new java.awt.Color(204, 204, 204));
 
@@ -1380,9 +1381,12 @@ public class Layout extends javax.swing.JFrame {
 
     private void ProdukButtonBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ProdukButtonBatalActionPerformed
         // TODO add your handling code here:
+        ProdukButtonSimpan.setEnabled(true);
+        ProdukButtonEdit.setEnabled(false);
+        ProdukButtonBatal.setEnabled(false);
+        ProdukButtonHapus.setEnabled(false);
         ProdukClear();
         ProdukLoadData();
-        ProdukButtonSimpan.setEnabled(true);
         ProdukPrefixID();
     }//GEN-LAST:event_ProdukButtonBatalActionPerformed
 
@@ -1552,9 +1556,12 @@ public class Layout extends javax.swing.JFrame {
 
     private void PelangganButtonBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PelangganButtonBatalActionPerformed
         // TODO add your handling code here:
+        PelangganButtonSimpan.setEnabled(true);
+        PelangganButtonEdit.setEnabled(false);
+        PelangganButtonBatal.setEnabled(false);
+        PelangganButtonHapus.setEnabled(false);
         PelangganClear();
         PelangganLoadData();
-        PelangganButtonSimpan.setEnabled(true);
         PelangganPrefixID();
     }//GEN-LAST:event_PelangganButtonBatalActionPerformed
 
